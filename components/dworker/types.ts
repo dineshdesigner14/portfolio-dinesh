@@ -9,3 +9,9 @@ export interface EcosystemColors {
   accent: string;
   purple: string;
 }
+
+export interface RingNodeSpec {
+  name: string;
+  base: Point;
+  angle: number;
+}

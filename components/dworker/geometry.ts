@@ -1,4 +1,4 @@
-import type { Point } from "./types";
+import type { Point, RingNodeSpec } from "./types";
 
 export interface OrbitNodeSpec {
   name: string;
@@ -41,4 +41,18 @@ export function curvedPath(a: Point, b: Point, bend = 0.18): string {
   const cxp = midX + perpX * offset;
   const cyp = midY + perpY * offset;
   return `M ${a.x},${a.y} Q ${cxp},${cyp} ${b.x},${b.y}`;
+}
+
+/**
+ * Full ring layout: assigns each name an evenly-spaced angle, then computes
+ * its resting position on the ring (rotation = 0, reveal = 1, i.e. fully
+ * placed on its orbit). Used by useOrbit for a static/initial layout.
+ */
+export function computeRingLayout(names: string[], cx: number, cy: number, radius: number): RingNodeSpec[] {
+  const specs = assignRingAngles(names, 0);
+  return specs.map((s) => ({
+    name: s.name,
+    base: livePosition(cx, cy, radius, s.baseAngle, 0, 1),
+    angle: s.baseAngle,
+  }));
 }
