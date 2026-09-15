@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>D-Worker — The Modern Engineering Workspace</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html, body {
+    background: #000000;
+    color: #f5f5f7;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+    overflow-x: hidden;
+  }
+
+  .scroll-container {
+    position: relative;
+    width: 100%;
+    height: 800vh;
+    background: #000000;
+  }
+
+  .sticky-stage {
+    position: sticky;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: #000000;
+  }
+
+  canvas {
+    width: 100vw;
+    height: 100vh;
+    display: block;
+    object-fit: cover;
+    background: #000000;
+  }
+
+  .panel {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, calc(-50% + 40px));
+    width: min(560px, 86vw);
+    padding: 40px 44px;
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(22px) saturate(140%);
+    -webkit-backdrop-filter: blur(22px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 24px;
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.02),
+      0 20px 60px rgba(0, 0, 0, 0.55),
+      0 0 80px rgba(64, 156, 255, 0.12);
+    opacity: 0;
+    pointer-events: none;
+    will-change: opacity, transform;
+  }
+
+  .panel--left {
+    left: 12%;
+    transform: translate(0, calc(-50% + 40px));
+  }
+
+  .panel--right {
+    left: auto;
+    right: 12%;
+    transform: translate(0, calc(-50% + 40px));
+  }
+
+  @media (max-width: 900px) {
+    .panel--left,
+    .panel--right {
+      left: 50%;
+      right: auto;
+      transform: translate(-50%, calc(-50% + 40px));
+      width: 88vw;
+    }
+  }
+
+  .panel h2 {
+    font-size: clamp(1.6rem, 3vw, 2.3rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    margin-bottom: 16px;
+    background: linear-gradient(180deg, #ffffff 0%, #d6e6ff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .panel p {
+    font-size: clamp(0.95rem, 1.3vw, 1.08rem);
+    line-height: 1.6;
+    color: rgba(245, 245, 247, 0.72);
+    font-weight: 400;
+    max-width: 46ch;
+  }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 36px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(245, 245, 247, 0.4);
+    opacity: 1;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+  <div class="scroll-container" id="scrollContainer">
+    <div class="sticky-stage">
+      <canvas id="sequenceCanvas"></canvas>
+
+      <div class="panel panel--left" data-index="0">
+        <h2>The Modern Engineering Workspace</h2>
+        <p>D-Worker brings Cloud Infrastructure, Kubernetes, Terraform, CI/CD, Monitoring, and Automation into one unified engineering platform.</p>
+      </div>
+
+      <div class="panel panel--right" data-index="1">
+        <h2>Built for DevOps Engineers</h2>
+        <p>Manage infrastructure, deployments, observability, and automation from a single workspace designed for modern cloud teams.</p>
+      </div>
+
+      <div class="panel panel--left" data-index="2">
+        <h2>Engineering Without Complexity</h2>
+        <p>From provisioning cloud resources to monitoring production systems, D-Worker simplifies complex engineering workflows through an intuitive interface.</p>
+      </div>
+
+      <div class="panel panel--right" data-index="3">
+        <h2>Currently Building D-Worker</h2>
+        <p>A next-generation engineering operating system focused on reliability, scalability, automation, and developer productivity.</p>
+      </div>
+
+      <div class="scroll-hint" id="scrollHint">Scroll</div>
+    </div>
+  </div>
+
+<script>
+(function () {
+  "use strict";
+
+  const TOTAL_FRAMES = 360;
+  const FRAME_PATH = "images/";
+  const FRAME_PREFIX = "ezgif-frame-";
+  const FRAME_EXT = ".jpg";
+  const BATCH_SIZE = 10;
+  const CANVAS_NATIVE_WIDTH = 1920;
+  const CANVAS_NATIVE_HEIGHT = 1080;
+
+  const canvas = document.getElementById("sequenceCanvas");
+  const ctx = canvas.getContext("2d");
+  const scrollContainer = document.getElementById("scrollContainer");
+  const scrollHint = document.getElementById("scrollHint");
+  const panels = Array.prototype.slice.call(document.querySelectorAll(".panel"));
+
+  canvas.width = CANVAS_NATIVE_WIDTH;
+  canvas.height = CANVAS_NATIVE_HEIGHT;
+
+  const requestIdle =
+    window.requestIdleCallback ||
+    function (cb) {
+      const start = Date.now();
+      return setTimeout(function () {
+        cb({
+          didTimeout: false,
+          timeRemaining: function () {
+            return Math.max(0, 50 - (Date.now() - start));
+          }
+        });
+      }, 1);
+    };
+
+  function frameFileName(index) {
+    const num = String(index).padStart(3, "0");
+    return FRAME_PATH + FRAME_PREFIX + num + FRAME_EXT;
+  }
+
+  const frames = new Array(TOTAL_FRAMES + 1);
+  const frameLoaded = new Array(TOTAL_FRAMES + 1).fill(false);
+
+  let lastDrawnFrameIndex = -1;
+  let currentScrollY = window.scrollY || window.pageYOffset || 0;
+  let ticking = false;
+
+  function drawFrame(index) {
+    const img = frames[index];
+    if (!img || !frameLoaded[index]) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    lastDrawnFrameIndex = index;
+  }
+
+  function loadFrame(index, onDone) {
+    if (index < 1 || index > TOTAL_FRAMES || frameLoaded[index]) {
+      if (onDone) onDone();
+      return;
+    }
+    const img = new Image();
+    img.onload = function () {
+      frameLoaded[index] = true;
+      if (onDone) onDone();
+    };
+    img.onerror = function () {
+      if (onDone) onDone();
+    };
+    img.src = frameFileName(index);
+    frames[index] = img;
+  }
+
+  function loadBatch(startIndex) {
+    if (startIndex > TOTAL_FRAMES) return;
+    const endIndex = Math.min(startIndex + BATCH_SIZE - 1, TOTAL_FRAMES);
+    let remaining = endIndex - startIndex + 1;
+
+    for (let i = startIndex; i <= endIndex; i++) {
+      loadFrame(i, function () {
+        remaining--;
+        if (remaining <= 0) {
+          requestIdle(function () {
+            loadBatch(endIndex + 1);
+          });
+        }
+      });
+    }
+  }
+
+  function initialLoad() {
+    loadFrame(1, function () {
+      drawFrame(1);
+      requestIdle(function () {
+        loadBatch(2);
+      });
+    });
+  }
+
+  function getScrollProgress() {
+    const containerHeight = scrollContainer.offsetHeight;
+    const viewportHeight = window.innerHeight;
+    const maxScroll = containerHeight - viewportHeight;
+    if (maxScroll <= 0) return 0;
+    const progress = currentScrollY / maxScroll;
+    return Math.min(1, Math.max(0, progress));
+  }
+
+  function progressToFrameIndex(progress) {
+    const raw = Math.round(progress * (TOTAL_FRAMES - 1)) + 1;
+    return Math.min(TOTAL_FRAMES, Math.max(1, raw));
+  }
+
+  function nearestLoadedFrame(targetIndex) {
+    if (frameLoaded[targetIndex]) return targetIndex;
+    for (let offset = 1; offset < TOTAL_FRAMES; offset++) {
+      const below = targetIndex - offset;
+      const above = targetIndex + offset;
+      if (below >= 1 && frameLoaded[below]) return below;
+      if (above <= TOTAL_FRAMES && frameLoaded[above]) return above;
+    }
+    return lastDrawnFrameIndex > 0 ? lastDrawnFrameIndex : 1;
+  }
+
+  const panelRanges = [
+    { start: 0.06, peak: 0.16, end: 0.26 },
+    { start: 0.32, peak: 0.42, end: 0.52 },
+    { start: 0.56, peak: 0.66, end: 0.76 },
+    { start: 0.8, peak: 0.88, end: 0.97 }
+  ];
+
+  function computePanelOpacity(progress, range) {
+    if (progress <= range.start || progress >= range.end) return 0;
+    if (progress <= range.peak) {
+      return (progress - range.start) / (range.peak - range.start);
+    }
+    return 1 - (progress - range.peak) / (range.end - range.peak);
+  }
+
+  function updatePanels(progress) {
+    for (let i = 0; i < panels.length; i++) {
+      const range = panelRanges[i];
+      const opacity = Math.min(1, Math.max(0, computePanelOpacity(progress, range)));
+      const translateY = 40 - opacity * 40;
+      const panel = panels[i];
+      panel.style.opacity = opacity.toFixed(3);
+      panel.style.pointerEvents = opacity > 0.05 ? "auto" : "none";
+
+      if (panel.classList.contains("panel--right")) {
+        panel.style.transform = "translate(0, calc(-50% + " + translateY + "px))";
+      } else if (panel.classList.contains("panel--left") && window.innerWidth > 900) {
+        panel.style.transform = "translate(0, calc(-50% + " + translateY + "px))";
+      } else {
+        panel.style.transform = "translate(-50%, calc(-50% + " + translateY + "px))";
+      }
+    }
+  }
+
+  function updateScrollHint(progress) {
+    scrollHint.style.opacity = progress > 0.03 ? "0" : "1";
+  }
+
+  function renderTick() {
+    ticking = false;
+    const progress = getScrollProgress();
+    const targetIndex = progressToFrameIndex(progress);
+
+    if (targetIndex !== lastDrawnFrameIndex) {
+      const availableIndex = nearestLoadedFrame(targetIndex);
+      drawFrame(availableIndex);
+    }
+
+    updatePanels(progress);
+    updateScrollHint(progress);
+  }
+
+  function onScroll() {
+    currentScrollY = window.scrollY || window.pageYOffset || 0;
+    if (!ticking) {
+      ticking = true;
+      requestAnimationFrame(renderTick);
+    }
+  }
+
+  function onResize() {
+    if (!ticking) {
+      ticking = true;
+      requestAnimationFrame(renderTick);
+    }
+  }
+
+  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", onResize, { passive: true });
+
+  initialLoad();
+  requestAnimationFrame(renderTick);
+})();
+</script>
+
+</body>
+</html>
