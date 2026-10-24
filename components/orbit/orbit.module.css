@@ -1,0 +1,101 @@
+/* Orbit Garden — D-Worker ecosystem.
+   Only transform / opacity / stroke-dashoffset are animated. */
+
+/* ---------- rings ---------- */
+.ring {
+  fill: none;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-dasharray: 3 9;
+  animation: ringFlow var(--dur, 70s) linear infinite;
+  transition: opacity 0.4s ease;
+}
+.ringRev {
+  animation-direction: reverse;
+}
+
+@keyframes ringFlow {
+  to {
+    stroke-dashoffset: -240; /* a multiple of the 12px dash period → seamless */
+  }
+}
+
+.satellite {
+  transform-origin: 0 0;
+  transform-box: view-box;
+  animation: orbitSpin var(--dur, 40s) linear infinite;
+}
+
+@keyframes orbitSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- chips ---------- */
+.float {
+  animation: orbitFloat var(--dur, 6s) ease-in-out var(--delay, 0s) infinite;
+}
+
+@keyframes orbitFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+/* ---------- hub ---------- */
+.halo {
+  animation: haloPulse 6s ease-in-out infinite;
+}
+
+@keyframes haloPulse {
+  0%,
+  100% {
+    opacity: 0.75;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+/* ---------- workflow lines ---------- */
+.edgeFlow {
+  stroke-dasharray: 5 9;
+  animation: edgeFlow 1.2s linear infinite;
+}
+
+@keyframes edgeFlow {
+  to {
+    stroke-dashoffset: -28; /* multiple of the 14px dash period */
+  }
+}
+
+.edgeIn {
+  animation: edgeIn 0.5s ease both;
+}
+
+@keyframes edgeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ring,
+  .satellite,
+  .float,
+  .halo,
+  .edgeFlow,
+  .edgeIn {
+    animation: none !important;
+  }
+}

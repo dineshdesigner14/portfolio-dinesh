@@ -1,0 +1,178 @@
+/* ==========================================================================
+   Cloud Odyssey — Hero styles
+   Palette: #9FD8FF #BFE7FF #D8F2FF #FFFFFF #FFF8F2 #DCCEFF #C7B6FF
+            #FFE3A8 #FFD6A5 #FFC98C #4FA3FF #5A84FF
+   Only transform / opacity are animated (GPU friendly).
+   ========================================================================== */
+
+.hero {
+  background: #bfe7ff;
+}
+
+/* ---------- Sky ---------- */
+.sky {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    #9fd8ff 0%,
+    #bfe7ff 22%,
+    #d8f2ff 38%,
+    #dcceff 60%,
+    #ffd6a5 84%,
+    #fff8f2 100%
+  );
+}
+
+.sun {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 16% 9%,
+    rgba(255, 250, 225, 0.95) 0%,
+    rgba(255, 227, 168, 0.55) 12%,
+    rgba(255, 227, 168, 0.18) 28%,
+    transparent 48%
+  );
+}
+
+.rays,
+.rays2 {
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: screen;
+  -webkit-mask-image: radial-gradient(circle at 16% 6%, #000 0%, transparent 74%);
+  mask-image: radial-gradient(circle at 16% 6%, #000 0%, transparent 74%);
+}
+
+.rays {
+  background: conic-gradient(
+    from 112deg at 16% 6%,
+    transparent 0deg,
+    rgba(255, 255, 255, 0.34) 5deg,
+    transparent 12deg,
+    transparent 20deg,
+    rgba(255, 243, 200, 0.3) 26deg,
+    transparent 33deg,
+    transparent 44deg,
+    rgba(255, 255, 255, 0.24) 50deg,
+    transparent 58deg,
+    transparent 90deg
+  );
+  animation: rayPulse 14s ease-in-out infinite;
+}
+
+.rays2 {
+  background: conic-gradient(
+    from 128deg at 16% 6%,
+    transparent 0deg,
+    rgba(255, 255, 255, 0.22) 4deg,
+    transparent 10deg,
+    transparent 24deg,
+    rgba(255, 227, 168, 0.22) 30deg,
+    transparent 38deg,
+    transparent 60deg,
+    rgba(255, 255, 255, 0.18) 66deg,
+    transparent 74deg,
+    transparent 90deg
+  );
+  animation: rayPulse 19s ease-in-out -6s infinite reverse;
+}
+
+.horizonGlow {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 46%;
+  background: radial-gradient(
+    ellipse at 50% 100%,
+    rgba(255, 214, 165, 0.55),
+    transparent 70%
+  );
+}
+
+@keyframes rayPulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ---------- Clouds ---------- */
+.driftFar {
+  animation: drift 120s ease-in-out infinite alternate;
+}
+.driftMid {
+  animation: drift 82s ease-in-out -20s infinite alternate;
+}
+.driftFront {
+  animation: drift 56s ease-in-out -10s infinite alternate;
+}
+
+@keyframes drift {
+  from {
+    transform: translate3d(-3%, 0, 0);
+  }
+  to {
+    transform: translate3d(4%, 0, 0);
+  }
+}
+
+.breathe {
+  transform-origin: 50% 70%;
+  animation: breathe var(--dur, 14s) ease-in-out var(--delay, 0s) infinite alternate;
+}
+
+@keyframes breathe {
+  from {
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.045) translate3d(0, -1.5%, 0);
+  }
+}
+
+/* ---------- Content ---------- */
+.veil {
+  position: absolute;
+  inset: -12% -18%;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 255, 255, 0.55) 0%,
+    rgba(255, 255, 255, 0.22) 45%,
+    transparent 70%
+  );
+}
+
+.scrollBounce {
+  animation: scrollBounce 2.2s ease-in-out infinite;
+}
+
+@keyframes scrollBounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(5px);
+  }
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .rays,
+  .rays2,
+  .driftFar,
+  .driftMid,
+  .driftFront,
+  .breathe,
+  .scrollBounce {
+    animation: none !important;
+  }
+}

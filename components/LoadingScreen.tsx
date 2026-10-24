@@ -48,9 +48,9 @@ export default function LoadingScreen({ onDone }: { onDone: () => void }) {
             D
           </motion.div>
 
-          <div className="mb-4 h-1 w-56 overflow-hidden rounded-full bg-white/10">
+          <div className="mb-4 h-1 w-56 overflow-hidden rounded-full bg-[#4fa3ff]/20">
             <motion.div
-              className="h-full bg-gradient-to-r from-primary to-[#7c3aed]"
+              className="h-full bg-gradient-to-r from-[#4fa3ff] to-[#8e7be0]"
               animate={{ width: `${progress}%` }}
               transition={{ duration: 0.3 }}
             />

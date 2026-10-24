@@ -1,0 +1,520 @@
+import type { CaseStudy } from "../designLab";
+
+/**
+ * Case study 3 — Kubernetes Platform at Scale (conceptual reference design).
+ * Component badges reflect hands-on experience with each technology (from the resume).
+ * "At scale" describes the design goal, never the size of any employer's system.
+ * No metrics, no employer detail.
+ */
+export const K8S_CASE: CaseStudy = {
+  id: "k8s-platform",
+  title: "Kubernetes Platform at Scale",
+  short: "Kubernetes platform",
+  kind: "conceptual",
+  tagline: "From a commit to running pods, and from a traffic spike to new capacity.",
+  summary:
+    "A reference design for running applications on Kubernetes: a GitOps delivery path, traffic that flows through an ingress and a mesh gateway to workloads, and three layers of scaling (HPA for pods, KEDA for events, Karpenter for nodes).",
+  disclaimer:
+    "A reference design built from technologies I work with. “At scale” describes what the design is for, not the size of any system I run.",
+  reviewed: false,
+  real: {
+    operated: [
+      "Production EKS workloads with Docker, Helm and Argo CD",
+      "HPA, KEDA and Karpenter for scaling",
+      "NGINX Ingress Controller, and Istio Gateways and VirtualServices",
+      "Rolling updates and Helm rollbacks, and a blue/green database upgrade",
+      "StatefulSets, CronJobs and Kubernetes RBAC",
+      "Resolving CrashLoopBackOff, ImagePullBackOff, OOM, ingress/DNS and EBS Multi-Attach incidents",
+    ],
+    concept: [
+      "Canary (progressive) delivery and cluster-wide policy are reference-design elements, not claims of experience",
+    ],
+  },
+  viewBox: { w: 1020, h: 580 },
+  zones: [
+    { id: "delivery", label: "Delivery · GitOps", x: 140, y: 40, w: 850, h: 130, tone: "lavender" },
+    { id: "traffic", label: "Cluster · serving traffic", x: 140, y: 190, w: 850, h: 130, tone: "sky" },
+    { id: "scaling", label: "Cluster · scaling & capacity", x: 140, y: 340, w: 850, h: 215, tone: "gold" },
+  ],
+  nodes: [
+    { id: "git", label: "Git repo", sub: "code + manifests", icon: "git", x: 245, y: 108, provenance: "operated" },
+    { id: "ci", label: "CI pipeline", sub: "build + test", icon: "hammer", x: 455, y: 108, provenance: "operated" },
+    { id: "registry", label: "Image registry", sub: "ECR", icon: "package", x: 665, y: 108, provenance: "operated" },
+    { id: "argocd", label: "Argo CD", sub: "GitOps sync", icon: "refresh", x: 875, y: 108, provenance: "operated" },
+    { id: "actor", label: "Users", sub: "clients", icon: "user", x: 60, y: 258, w: 110, h: 60, provenance: "actor" },
+    { id: "ingress", label: "Ingress", sub: "NGINX controller", icon: "network", x: 245, y: 258, provenance: "operated" },
+    { id: "gateway", label: "Mesh gateway", sub: "Istio", icon: "waypoints", x: 455, y: 258, provenance: "operated" },
+    { id: "pods", label: "Deployments", sub: "pods + Helm", icon: "boxes", x: 665, y: 258, provenance: "operated" },
+    { id: "sts", label: "StatefulSet", sub: "EBS volumes", icon: "disk", x: 875, y: 258, provenance: "operated" },
+    { id: "prom", label: "Prometheus", sub: "metrics", icon: "chart", x: 245, y: 410, provenance: "operated" },
+    { id: "hpa", label: "HPA", sub: "CPU / memory", icon: "gauge", x: 455, y: 410, provenance: "operated" },
+    { id: "keda", label: "KEDA", sub: "event-driven", icon: "zap", x: 665, y: 410, provenance: "operated" },
+    { id: "karp", label: "Karpenter", sub: "node provisioning", icon: "cpu", x: 875, y: 410, provenance: "operated" },
+    { id: "nodes", label: "Worker nodes", sub: "EC2 capacity", icon: "api", x: 665, y: 500, provenance: "operated" },
+  ],
+  edges: [
+    { id: "e-push", from: "git", to: "ci", label: "push triggers build", kind: "request", bend: 0.04 },
+    { id: "e-image", from: "ci", to: "registry", label: "push image", kind: "data", bend: 0.04 },
+    { id: "e-release", from: "registry", to: "argocd", label: "new version to roll out", kind: "control", bend: 0.04 },
+    { id: "e-sync-d", from: "argocd", to: "pods", label: "sync (Helm release)", kind: "control", bend: 0.05 },
+    { id: "e-sync-s", from: "argocd", to: "sts", label: "sync", kind: "control", bend: 0.03 },
+    { id: "e-user", from: "actor", to: "ingress", label: "request", kind: "request", bend: 0.03 },
+    { id: "e-in", from: "ingress", to: "gateway", label: "route", kind: "request", bend: 0.04 },
+    { id: "e-gw", from: "gateway", to: "pods", label: "service routing", kind: "request", bend: 0.04 },
+    { id: "e-data", from: "pods", to: "sts", label: "read / write", kind: "data", bend: 0.04 },
+    { id: "e-scrape", from: "pods", to: "prom", label: "scrape metrics", kind: "data", bend: 0.04 },
+    { id: "e-metric", from: "prom", to: "hpa", label: "metrics", kind: "data", bend: 0.04 },
+    { id: "e-hpa", from: "hpa", to: "pods", label: "set replicas", kind: "control", bend: 0.05 },
+    { id: "e-keda", from: "keda", to: "pods", label: "scale on events", kind: "control", bend: 0.03 },
+    { id: "e-pending", from: "pods", to: "karp", label: "pending pods", kind: "data", bend: 0.05 },
+    { id: "e-nodes", from: "karp", to: "nodes", label: "add / remove nodes", kind: "control", bend: 0.05 },
+  ],
+  flows: [
+    {
+      id: "release",
+      label: "Ship a release",
+      blurb: "Commit to running pods",
+      steps: [
+        {
+          title: "A change is pushed",
+          detail: "A commit lands in Git and triggers the pipeline.",
+          nodes: ["git", "ci"],
+          edges: ["e-push"],
+        },
+        {
+          title: "Build and publish the image",
+          detail: "CI builds and tests the image, then pushes it to the registry.",
+          nodes: ["ci", "registry"],
+          edges: ["e-image"],
+        },
+        {
+          title: "GitOps takes over",
+          detail: "Argo CD notices the new desired state and syncs it to the cluster. Git is the source of truth.",
+          nodes: ["registry", "argocd"],
+          edges: ["e-release"],
+        },
+        {
+          title: "Rolling update",
+          detail:
+            "New pods start and must pass readiness checks before old ones are removed, so the service keeps answering during the rollout.",
+          nodes: ["argocd", "pods", "sts"],
+          edges: ["e-sync-d", "e-sync-s"],
+        },
+        {
+          title: "Roll back if it fails",
+          detail: "If the new version fails its checks, go back to the previous revision with a Helm rollback or an Argo CD revert.",
+          nodes: ["pods"],
+          edges: [],
+        },
+      ],
+    },
+    {
+      id: "serve",
+      label: "Serve a request",
+      blurb: "Ingress → mesh → pods → data",
+      steps: [
+        {
+          title: "Request arrives",
+          detail: "Traffic enters the cluster through the ingress controller.",
+          nodes: ["actor", "ingress"],
+          edges: ["e-user"],
+        },
+        {
+          title: "Through the mesh gateway",
+          detail: "The mesh gateway applies routing rules (virtual services) and can add security and traffic policy.",
+          nodes: ["ingress", "gateway"],
+          edges: ["e-in"],
+        },
+        {
+          title: "To the workload",
+          detail: "A Kubernetes service picks a healthy pod from the Deployment.",
+          nodes: ["gateway", "pods"],
+          edges: ["e-gw"],
+        },
+        {
+          title: "Stateful data",
+          detail: "Stateful workloads keep data on persistent volumes that follow the pod.",
+          nodes: ["pods", "sts"],
+          edges: ["e-data"],
+        },
+      ],
+    },
+    {
+      id: "scale",
+      label: "Scale under load",
+      blurb: "Pods, events, then nodes",
+      steps: [
+        {
+          title: "Metrics come in",
+          detail: "Prometheus scrapes the pods and exposes the numbers autoscalers need.",
+          nodes: ["pods", "prom"],
+          edges: ["e-scrape"],
+        },
+        {
+          title: "HPA adds replicas",
+          detail: "The Horizontal Pod Autoscaler raises the replica count when CPU or memory runs high.",
+          nodes: ["prom", "hpa", "pods"],
+          edges: ["e-metric", "e-hpa"],
+        },
+        {
+          title: "KEDA reacts to events",
+          detail: "For queue- or event-driven work, KEDA scales on the backlog instead of on CPU, and can scale to zero.",
+          nodes: ["keda", "pods"],
+          edges: ["e-keda"],
+        },
+        {
+          title: "Pods can't be placed",
+          detail: "When no node has room, new pods stay Pending. That is the signal for more capacity.",
+          nodes: ["pods", "karp"],
+          edges: ["e-pending"],
+        },
+        {
+          title: "Karpenter adds nodes",
+          detail: "Karpenter launches nodes that fit the pending pods, and removes them when they're no longer needed.",
+          nodes: ["karp", "nodes"],
+          edges: ["e-nodes"],
+        },
+      ],
+    },
+  ],
+  failures: [
+    {
+      id: "bad-release",
+      label: "Bad release (crash loop or OOM)",
+      breaks: ["pods"],
+      provenance: "operated",
+      symptom: "New pods restart repeatedly or get killed, and some requests fail.",
+      behaviour:
+        "A rolling update keeps the old pods serving until the new ones are ready, so a failing version limits the damage. Rolling back returns to the last good revision.",
+      mitigation: "Readiness probes, sensible requests and limits, and a fast rollback path (Helm rollback or an Argo CD revert).",
+    },
+    {
+      id: "spike",
+      label: "Spike faster than capacity",
+      breaks: ["karp"],
+      provenance: "concept",
+      symptom: "Pods stay Pending and latency rises.",
+      behaviour:
+        "HPA and KEDA ask for more replicas, but there are no free nodes until Karpenter brings some. A new node takes time to become ready.",
+      mitigation: "Keep some spare capacity, make node start-up fast, and use rate limiting to protect the system while it scales.",
+    },
+    {
+      id: "ebs",
+      label: "Node replaced under a StatefulSet",
+      breaks: ["sts", "nodes"],
+      provenance: "operated",
+      symptom: "A StatefulSet pod sticks in Terminating and its replacement can't start.",
+      behaviour:
+        "An EBS volume attaches to one node at a time. If the old node goes away without a clean detach, the volume can still look attached, which blocks the new pod (a Multi-Attach error). This is a failure type I've dealt with.",
+      mitigation: "Drain nodes gracefully, understand how volume detach is handled, and use disruption budgets on stateful workloads.",
+    },
+    {
+      id: "metrics",
+      label: "Metrics unavailable",
+      breaks: ["prom"],
+      provenance: "concept",
+      symptom: "Autoscaling and dashboards go blind.",
+      behaviour:
+        "Autoscalers that need those metrics can't decide, so the cluster stays at its current size while it keeps serving.",
+      mitigation: "Run metrics highly available, alert on missing data, and set safe minimum replica counts.",
+    },
+  ],
+  info: {
+    actor: {
+      what: "Clients using the application. Not a component of the platform.",
+      scaling: "—",
+      failure: "—",
+      tradeoffs: [],
+      reliability: "—",
+      security: "—",
+      cost: "—",
+    },
+    git: {
+      what: "The source of truth: application code and, in GitOps, the Kubernetes manifests or Helm values that describe what should run.",
+      scaling: "Scales with the team. Branch rules and reviews matter more than capacity.",
+      failure: "If Git is unreachable you can't ship, but what is already running keeps running.",
+      tradeoffs: [
+        "Keeping desired state in Git gives history and review, but changes must go through Git, even urgent ones.",
+        "One repo for code and config is simple; separate repos give cleaner access control.",
+      ],
+      reliability: "Protected main branch, required reviews and a dependable hosted service.",
+      security: "Never commit secrets. Use signed commits or required reviews for production paths.",
+      cost: "Low.",
+    },
+    ci: {
+      what: "The pipeline that builds and tests the image on every change (for example Jenkins, GitHub Actions or GitLab CI).",
+      scaling: "Add build agents. Cache dependencies and layers to keep builds quick.",
+      failure: "A failing pipeline stops releases, not running services.",
+      tradeoffs: [
+        "More automated checks catch more problems but make the pipeline slower.",
+        "Hosted runners are easy; self-hosted ones give control and need upkeep.",
+      ],
+      reliability: "Reproducible builds with pinned base images, and clear failure messages.",
+      security: "Least-privilege credentials, scan images, and don't let pull requests from forks use production secrets.",
+      cost: "Build minutes and runners. Caching pays for itself.",
+    },
+    registry: {
+      what: "Stores the built container images (for example Amazon ECR).",
+      scaling: "Managed. Image pulls scale with the number of nodes starting pods.",
+      failure: "If it's unreachable, new pods can't start (ImagePullBackOff) while existing pods keep running.",
+      tradeoffs: [
+        "A registry in the same cloud region pulls fast and avoids rate limits from public registries.",
+        "Keeping many old images costs storage, but you need some for rollback.",
+      ],
+      reliability: "Pin images by digest or immutable tag, and keep recent versions for rollback.",
+      security: "Private repositories, image scanning, and permissions limited to CI and the nodes.",
+      cost: "Storage and data transfer. Lifecycle rules expire old images.",
+    },
+    argocd: {
+      what: "Argo CD, a GitOps controller. It continuously compares the cluster with Git and applies the difference.",
+      scaling: "One instance manages many applications. Large estates need sharding.",
+      failure: "If it's down, nothing new is deployed, but the workloads keep running.",
+      tradeoffs: [
+        "Pull-based deploys are auditable and self-healing, but a manual cluster change gets reverted, which can surprise people.",
+        "Automatic sync is fast; manual sync adds a safety step for production.",
+      ],
+      reliability: "Health checks per application, and a rollback that is a Git revert.",
+      security: "Limit who can change what in each project, and keep cluster credentials inside the cluster.",
+      cost: "Small. Mostly the effort of structuring repositories.",
+    },
+    ingress: {
+      what: "The ingress controller (NGINX) that accepts external traffic and routes it to services by host and path, with TLS.",
+      scaling: "Run several replicas behind a cloud load balancer and scale on connections or CPU.",
+      failure: "If the controller is down, nothing reaches the cluster. Run several replicas across nodes.",
+      tradeoffs: [
+        "One shared ingress is economical but a bad config affects everyone.",
+        "Rich annotations are powerful and easy to get subtly wrong.",
+      ],
+      reliability: "At least two replicas, health checks, and a validated config before reload.",
+      security: "TLS everywhere, sensible timeouts and body limits, and rate limiting on sensitive paths.",
+      cost: "A load balancer plus a few small pods.",
+    },
+    gateway: {
+      what: "The Istio gateway and virtual services: routing, traffic policy and mutual TLS inside the mesh.",
+      scaling: "Gateways scale like any deployment. Sidecars add a little CPU and memory per pod.",
+      failure: "A wrong VirtualService can send traffic nowhere. Test routing changes with a small share first.",
+      tradeoffs: [
+        "A mesh gives traffic control, security and visibility without changing the apps, but adds complexity and resource use.",
+        "Not every cluster needs one. For a few simple services, an ingress alone may be enough.",
+      ],
+      reliability: "Gradual rollout of routing changes, and timeouts and retries set deliberately.",
+      security: "Mutual TLS between services and explicit authorization policies.",
+      cost: "Extra CPU and memory for proxies, and the time to learn and operate it.",
+    },
+    pods: {
+      what: "The application's Deployments and the pods they run, released with Helm. Requests and limits, probes and disruption budgets are set here.",
+      scaling: "Scale replicas for more throughput. Requests tell the scheduler what a pod needs; limits cap what it can use.",
+      failure: "A pod exceeding its memory limit is killed (OOMKilled). Bad probes can cause restarts or send traffic to pods that aren't ready.",
+      tradeoffs: [
+        "Requests too low pack too many pods per node and cause noisy neighbours; too high waste money.",
+        "Tight limits protect the node but kill pods that burst.",
+      ],
+      reliability: "Readiness and liveness probes, several replicas spread across zones, and a PodDisruptionBudget.",
+      security: "Run as non-root, limit permissions with RBAC and service accounts, and keep secrets out of images.",
+      cost: "Mostly the cost of the nodes the pods need. Right-size requests to avoid paying for unused room.",
+    },
+    sts: {
+      what: "A StatefulSet: pods with stable identities and their own persistent volumes (EBS).",
+      scaling: "Scale carefully and in order. Storage and replication matter more than pod count.",
+      failure: "A volume attached to a node that is going away can block the replacement pod from starting.",
+      tradeoffs: [
+        "Persistent volumes give durable state, but pods become tied to a zone and a volume.",
+        "Running databases on Kubernetes gives control, but a managed database removes a lot of work.",
+      ],
+      reliability: "Graceful drains, disruption budgets, regular backups of the volumes and tested restores.",
+      security: "Encrypt volumes, restrict access, and treat backups as sensitive.",
+      cost: "Volumes are billed even when idle. Clean up unused ones.",
+    },
+    prom: {
+      what: "Prometheus: collects metrics from pods and nodes and makes them available to dashboards, alerts and autoscalers.",
+      scaling: "Scales with the number of series. Large setups shard or add long-term storage.",
+      failure: "If it's down, dashboards and metric-based scaling go blind.",
+      tradeoffs: [
+        "More labels give richer queries but explode the number of series and the cost.",
+        "Short retention is cheap; long retention needs extra storage.",
+      ],
+      reliability: "Run it highly available and alert when scraping stops.",
+      security: "Don't expose it publicly, and keep sensitive values out of labels.",
+      cost: "Storage and memory grow with the series count.",
+    },
+    hpa: {
+      what: "The Horizontal Pod Autoscaler: changes the number of pod replicas based on metrics such as CPU or memory.",
+      scaling: "Reacts in the order of tens of seconds to minutes. Not instant.",
+      failure: "Without good requests set, utilisation-based scaling makes poor decisions.",
+      tradeoffs: [
+        "Scaling quickly absorbs spikes but can thrash; a stabilisation window calms it down.",
+        "Scaling on CPU is simple but not always the best signal for the work.",
+      ],
+      reliability: "Set minimum and maximum replicas, and test scaling under realistic load.",
+      security: "Needs read access to metrics and permission to scale only its own targets.",
+      cost: "Saves money by shrinking when idle, bounded by the maximum you set.",
+    },
+    keda: {
+      what: "KEDA: scales workloads from external events such as queue length, including down to zero.",
+      scaling: "Great for bursty, queue-based work. Scales on the backlog rather than the CPU.",
+      failure: "If the event source can't be read, scaling stalls. Set safe defaults.",
+      tradeoffs: [
+        "Scaling to zero saves money, but the first event waits for a pod to start.",
+        "One more controller to run, in return for a much better signal for event-driven work.",
+      ],
+      reliability: "Cooldown periods, maximum replica limits and graceful shutdown for workers.",
+      security: "Credentials to the event source should be scoped and stored as secrets.",
+      cost: "Reduces idle compute.",
+    },
+    karp: {
+      what: "Karpenter: launches and removes nodes based on pending pods, picking instance types that fit.",
+      scaling: "Provisions capacity in response to demand, usually faster and more flexible than fixed node groups.",
+      failure: "Replacing or consolidating nodes moves pods around. Stateful workloads and long jobs need protection from it.",
+      tradeoffs: [
+        "Efficient packing and mixed instance types save money, but nodes churn more.",
+        "Spot capacity is cheaper and can be reclaimed at short notice.",
+      ],
+      reliability: "Disruption budgets, a mix of capacity types, and limits on total capacity.",
+      security: "Needs cloud permissions to create instances. Scope them tightly.",
+      cost: "Often lowers cost by removing idle nodes. Set limits so a runaway can't grow the bill.",
+    },
+    nodes: {
+      what: "The worker nodes (EC2 instances) where the pods actually run.",
+      scaling: "Added and removed by Karpenter as pods need room.",
+      failure: "A node can disappear. Pods spread across nodes and zones survive it.",
+      tradeoffs: [
+        "Bigger nodes pack more efficiently; smaller nodes limit the effect of losing one.",
+        "Fewer node types are simpler to operate; more types fit workloads better.",
+      ],
+      reliability: "Spread across zones, keep nodes patched, and drain before replacing.",
+      security: "Hardened images, minimal permissions on the node role and private networking.",
+      cost: "The largest line in the bill for most clusters.",
+    },
+  },
+  decisions: [
+    {
+      title: "Deploy with GitOps",
+      chose: "Argo CD syncing from Git",
+      over: "Pushing changes from the CI pipeline with kubectl or Helm",
+      because: "Git holds the desired state, so every change is reviewed, auditable and easy to revert.",
+      cost: "Manual cluster changes get reverted, and the repo layout needs thought.",
+      provenance: "operated",
+    },
+    {
+      title: "Three layers of scaling",
+      chose: "HPA for pods, KEDA for events, Karpenter for nodes",
+      over: "One fixed-size cluster",
+      because: "Each layer reacts to a different signal, so capacity follows demand without paying for idle nodes.",
+      cost: "More moving parts, and a delay while new nodes start.",
+      provenance: "operated",
+    },
+    {
+      title: "Safe releases by default",
+      chose: "Rolling updates with readiness checks, and a fast rollback",
+      over: "Replacing everything at once",
+      because: "The service keeps answering during a rollout, and a bad version can be undone quickly. For risky data changes a blue/green approach is safer.",
+      cost: "Rollouts take longer, and two versions run side by side for a while.",
+      provenance: "operated",
+    },
+    {
+      title: "Set requests and limits on everything",
+      chose: "Explicit requests and limits, tuned from observation",
+      over: "Leaving them unset",
+      because: "The scheduler can place pods well, noisy neighbours are contained, and autoscaling has a meaningful baseline.",
+      cost: "Needs measuring and revisiting as the app changes. Limits that are too tight cause OOM kills.",
+      provenance: "operated",
+    },
+    {
+      title: "Ingress plus a mesh gateway",
+      chose: "NGINX ingress for entry, Istio for routing and service-to-service policy",
+      over: "Exposing each service directly",
+      because: "One controlled entry point with TLS, and finer traffic control and mutual TLS inside.",
+      cost: "Extra complexity and resource use. Only worth it when those features are needed.",
+      provenance: "operated",
+    },
+    {
+      title: "Gradual delivery",
+      chose: "Canary releases that shift a small share of traffic first",
+      over: "All-or-nothing rollouts",
+      because: "Problems show up on a small share of users before everyone is affected.",
+      cost: "Needs good metrics to judge the canary, and extra tooling.",
+      provenance: "concept",
+    },
+  ],
+  walkthrough: {
+    title: "Pods restart repeatedly after a release",
+    label:
+      "Illustrative scenario — modelled on a common Kubernetes problem. It is not a record of a real incident.",
+    intro:
+      "Shortly after a release, error rates rise and the pod restart count keeps climbing. Follow the investigation.",
+    symptoms: [
+      "Pods of the new version keep restarting.",
+      "Some requests fail while others succeed.",
+      "It started right after the release.",
+    ],
+    evidence: [
+      {
+        source: "Pods",
+        finding: "The restart count is climbing for the new pods only.",
+        command: "kubectl get pods -n <namespace>",
+      },
+      {
+        source: "Pod details",
+        finding: "Last state: terminated, reason OOMKilled (exit code 137).",
+        command: "kubectl describe pod <pod> -n <namespace>",
+      },
+      {
+        source: "Resource use",
+        finding: "Memory climbs to the container's limit shortly after start.",
+        command: "kubectl top pod -n <namespace>",
+      },
+      {
+        source: "Release history",
+        finding: "The only change is the new application version; the memory limit is unchanged.",
+        command: "helm history <release> -n <namespace>",
+      },
+      {
+        source: "Other pods",
+        finding: "Other workloads on the same nodes are healthy.",
+      },
+    ],
+    hypotheses: [
+      {
+        text: "The image is broken or can't start",
+        verdict: "ruled-out",
+        because: "It pulls and starts fine, then gets killed after running for a while.",
+      },
+      {
+        text: "A configuration or environment value is wrong",
+        verdict: "ruled-out",
+        because: "The same config works on the previous version, and the process reports no config errors.",
+      },
+      {
+        text: "The node is under memory pressure",
+        verdict: "ruled-out",
+        because: "Other pods on the same nodes are healthy; only the new version is killed.",
+      },
+      {
+        text: "The new version needs more memory than its limit allows",
+        verdict: "confirmed",
+        because: "OOMKilled with memory at the limit, only for the new version, and the limit didn't change.",
+      },
+    ],
+    rootCause:
+      "The new release holds more data in memory than the container's memory limit allows, so the kernel kills the process each time it grows past it. The limit was sized for the old version.",
+    fix: [
+      "Roll back to the previous revision to restore service, with a Helm rollback or an Argo CD revert.",
+      "Find out why memory grew (a new cache, larger batches or a leak), and fix it or size the limit on purpose.",
+      "Re-release gradually and watch memory and restarts before widening.",
+    ],
+    prevention: [
+      "Load-test new versions with production-like limits before release.",
+      "Alert on restart counts and on memory close to the limit, not only on errors.",
+      "Roll out gradually (canary), so a bad version affects a small share first.",
+      "Review requests and limits as part of every release that changes resource use.",
+    ],
+    focus: {
+      symptoms: ["pods"],
+      evidence: ["pods", "argocd"],
+      hypotheses: ["pods", "nodes", "registry"],
+      rootCause: ["pods"],
+      fix: ["pods", "argocd"],
+      prevention: ["pods", "prom", "hpa"],
+    },
+  },
+};

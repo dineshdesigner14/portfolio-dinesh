@@ -1,15 +1,15 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg: #09090b;
-  --color-surface: #111827;
-  --color-surface-2: #1f2937;
-  --color-primary: #3b82f6;
+  --color-bg: #fff8f2;
+  --color-surface: #ffffff;
+  --color-surface-2: #eaf6ff;
+  --color-primary: #2f6fe0;
   --color-success: #10b981;
   --color-warning: #f59e0b;
-  --color-text: #f8fafc;
-  --color-text-secondary: #94a3b8;
-  --font-sans: "Inter", "Sora", ui-sans-serif, system-ui, sans-serif;
+  --color-text: #14304f;
+  --color-text-secondary: #4a6280;
+  --font-sans: var(--font-poppins), "Poppins", ui-sans-serif, system-ui, sans-serif;
 }
 
 html {
@@ -25,8 +25,17 @@ body {
 }
 
 ::selection {
-  background: rgba(59, 130, 246, 0.35);
-  color: #fff;
+  background: rgba(79, 163, 255, 0.3);
+  color: #14304f;
+}
+
+/* site-wide breeze cursor: hide the native cursor, but keep it for text fields */
+html.cursor-custom,
+html.cursor-custom * {
+  cursor: none !important;
+}
+html.cursor-custom :is(input, textarea, select, [contenteditable="true"]) {
+  cursor: text !important;
 }
 
 /* subtle noise overlay, used behind hero */
@@ -38,17 +47,20 @@ body {
   background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48ZmlsdGVyIGlkPSJuIj48ZmVUdXJidWxlbmNlIHR5cGU9ImZyYWN0YWxOb2lzZSIgYmFzZUZyZXF1ZW5jeT0iMC44NSIgbnVtT2N0YXZlcz0iMyIgc3RpdGNoVGlsZXM9InN0aXRjaCIvPjwvZmlsdGVyPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbHRlcj0idXJsKCNuKSIvPjwvc3ZnPg==");
 }
 
-/* glass surface helper */
+/* glass surface helper (light, frosted) */
 .glass {
-  background: rgba(17, 24, 39, 0.65);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.62);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  box-shadow:
+    0 8px 32px -4px rgba(90, 132, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
 /* gradient text */
 .gradient-text {
-  background: linear-gradient(90deg, #3b82f6, #7c3aed);
+  background: linear-gradient(90deg, #2f6fe0, #8e7be0);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -59,7 +71,7 @@ body {
   width: 8px;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(79, 163, 255, 0.35);
   border-radius: 999px;
 }
 

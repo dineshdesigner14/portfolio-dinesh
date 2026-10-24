@@ -26,8 +26,7 @@ export const NAV_LINKS = [
   { label: "Home", href: "#top" },
   { label: "About", href: "#about" },
   { label: "Journey", href: "#journey" },
-  { label: "Skills", href: "#skills" },
-  { label: "Experience", href: "#experience" },
+  { label: "Design Lab", href: "#design-lab" },
   { label: "Projects", href: "#projects" },
   { label: "Contact", href: "#contact" },
 ];
@@ -39,12 +38,6 @@ export const ABOUT = {
     "Over time, that curiosity grew into a passion for cloud infrastructure, automation, and platform engineering. What excites me most about DevOps is that it sits at the intersection of development and operations. You're not just writing code or managing servers — you're building the foundation that allows everything else to run smoothly.",
     "I enjoy taking complex problems and turning them into simple, repeatable solutions. Whether it's provisioning infrastructure with Terraform, orchestrating applications with Kubernetes, building CI/CD pipelines, or monitoring production workloads, I'm always looking for ways to improve reliability and developer experience.",
     "Right now, I'm building D-Worker — a modern Cloud & DevOps Engineering Workspace designed to bring infrastructure management, Kubernetes, Terraform, monitoring, documentation, automation, and project workflows into one unified platform.",
-  ],
-  counters: [
-    { value: 25, suffix: "+", label: "Projects Shipped" },
-    { value: 300, suffix: "+", label: "Deployments Automated" },
-    { value: 3, suffix: "+", label: "Years Learning" },
-    { value: 12, suffix: "", label: "Cloud Platforms" },
   ],
 };
 
@@ -86,22 +79,39 @@ export const SKILLS = [
 
 export const EXPERIENCE = [
   {
-    role: "DevOps Engineer",
-    company: "Current Company",
-    period: "2024 — Present",
+    role: "Junior DevOps Engineer",
+    company: "Cloud2Scale Technologies Pvt Ltd",
+    period: "Aug 2025 — Present",
     points: [
-      "Own CI/CD pipelines for 6 microservices, cutting deploy time from 40 min to under 5.",
-      "Migrated infrastructure to Terraform, replacing manual console clicks with version-controlled code.",
-      "Set up Prometheus + Grafana monitoring that catches issues before customers do.",
+      "Manage AWS infrastructure in a multi-account environment and operate production EKS workloads with Helm, Argo CD, HPA, KEDA and Karpenter.",
+      "Built an end-to-end CI/CD pipeline from Git commit to Kubernetes deployment, and provision AWS infrastructure with Terraform through CI/CD.",
+      "Take part in on-call incident response with RCA and runbooks; built SigNoz and Grafana/Loki dashboards; set up multi-region DR (ap-south-1 primary, ap-south-2 DR).",
     ],
   },
   {
-    role: "Junior Systems Engineer",
-    company: "Previous Company",
-    period: "2022 — 2024",
+    role: "DevOps / Cloud Support (Freelance)",
+    company: "Semalgo (Fintech)",
+    period: "Apr 2025 — May 2025",
     points: [
-      "Maintained on-prem Linux servers and automated routine patching with Ansible.",
-      "Built my first Docker-based dev environment, which is what got me hooked on containers.",
+      "Assisted in deploying the company's LMS portal under a Senior Solution Architect; troubleshot deployment and networking issues.",
+    ],
+  },
+  {
+    role: "DevOps Trainee",
+    company: "Kloud Tom India",
+    period: "May 2024 — May 2025",
+    points: [
+      "Created servers and AWS infrastructure with Terraform and deployed a ticket-booking application on EC2.",
+      "Configured an Application Load Balancer with target groups and path-based routing.",
+      "Maintained and fixed GitLab CI pipelines and updated base-image versions used for builds.",
+    ],
+  },
+  {
+    role: "Cloud & DevOps Intern",
+    company: "Instant Webs India",
+    period: "Jan 2024 — May 2024",
+    points: [
+      "Provisioned AWS infrastructure with Terraform, deployed Dockerized applications, and assisted with CI/CD and cost optimisation.",
     ],
   },
 ];
@@ -317,16 +327,13 @@ export const PROJECTS = [
   },
 ];
 
+/** No certifications earned yet — the Terraform Associate is the next one planned. */
 export const CERTIFICATIONS = [
-  { name: "AWS Certified Solutions Architect", year: "2024", icon: "Cloud" },
-  { name: "HashiCorp Certified: Terraform Associate", year: "2023", icon: "Boxes" },
-  { name: "Certified Kubernetes Administrator (CKA)", year: "2023", icon: "CircuitBoard" },
-  { name: "Docker Certified Associate", year: "2022", icon: "Container" },
-  { name: "Linux Foundation Certified Engineer", year: "2022", icon: "Terminal" },
+  { name: "HashiCorp Certified: Terraform Associate", year: "Planned", icon: "Boxes" },
 ];
 
 export const CONTACT = {
-  email: "you@example.com",
-  github: "https://github.com/yourusername",
-  linkedin: "https://linkedin.com/in/yourusername",
+  email: "kdhbpdinesh@gmail.com",
+  github: "https://github.com/dineshdesigner14",
+  linkedin: "https://linkedin.com/in/dinesh-kannan14",
 };

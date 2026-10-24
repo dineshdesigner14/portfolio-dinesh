@@ -70,7 +70,7 @@ export default function Navbar() {
           if (entry.isIntersecting) setActive(entry.target.id);
         });
       },
-      { threshold: 0.4, rootMargin: "-80px 0px -50% 0px" }
+      { threshold: 0, rootMargin: "-45% 0px -54% 0px" }
     );
     sections.forEach((s) => observer.observe(s));
     return () => observer.disconnect();

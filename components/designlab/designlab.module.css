@@ -1,0 +1,97 @@
+/* Design Lab — diagram animation.
+   Only transform / opacity / stroke-dashoffset are animated. */
+
+.node {
+  cursor: pointer;
+  outline: none;
+  transition: opacity 0.3s ease;
+}
+
+.focusRing {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.node:focus-visible .focusRing {
+  opacity: 1;
+}
+
+.nodeBody {
+  transition: stroke 0.25s ease, fill 0.25s ease;
+}
+
+.node:hover .nodeBody {
+  fill: #ffffff;
+}
+
+/* soft pulse on the components highlighted by the walkthrough */
+.halo {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: haloPulse 2.2s ease-in-out infinite;
+}
+
+@keyframes haloPulse {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.025);
+  }
+}
+
+/* "marching" dashes on the edge that is currently active */
+.march {
+  stroke-dasharray: 6 8;
+  animation: march 0.9s linear infinite;
+}
+
+@keyframes march {
+  to {
+    stroke-dashoffset: -28; /* multiple of the 14px period */
+  }
+}
+
+.edgeIdle {
+  transition: opacity 0.3s ease, stroke 0.25s ease;
+}
+
+.fadeIn {
+  animation: fadeIn 0.35s ease both;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* scroll hint on small screens */
+.swipeHint {
+  animation: swipeHint 2.4s ease-in-out infinite;
+}
+
+@keyframes swipeHint {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .halo,
+  .march,
+  .fadeIn,
+  .swipeHint {
+    animation: none !important;
+  }
+}
